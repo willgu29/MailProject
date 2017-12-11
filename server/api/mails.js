@@ -19,7 +19,7 @@ router.get('/mails/tracking', function (req, res, next) {
   console.log(req.query.id)
   console.log('Hello, this is an opened email!')
   // update the mail id
-  res.send('https://www.penguinjeffrey.com/public/assets/icon.png')
+  res.send('https://www.penguinjeffrey.com/public/assets/info.png')
 
 })
 
