@@ -15,12 +15,13 @@ router.get('/mails/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   res.json(id)
 })
 
-router.get('/mails/tracking', function (req, res, next) {
+
+
+router.get('/mails/tracking.gif', function (req, res, next) {
   console.log(req.query.id)
   console.log('Hello, this is an opened email!')
   // update the mail id
-  res.send('https://www.penguinjeffrey.com/public/assets/info.png')
-
+  res.send('none')
 })
 
 export default router

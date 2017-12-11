@@ -1,6 +1,6 @@
 <template>
   <section class="container">
-    <img id="tracking" src="https://www.mail.penguinjeffrey.com/api/mails/tracking" alt="Penguin Jeffrey Logo" class="logo" />
+    <img id="tracking" src="http://localhost:3001/api/mails/tracking.gif" alt="Sent by Penguin Jeffrey" class="logo" />
     <p>Hello</p>
   </section>
 </template>
@@ -10,7 +10,7 @@
 export default {
   head () {
     return {
-      title: 'Users'
+      title: 'index'
     }
   }
 }
