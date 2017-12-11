@@ -2,6 +2,7 @@ import express from 'express'
 import { Nuxt, Builder } from 'nuxt'
 
 import api from './api'
+import mongoose from 'mongoose'
 
 const app = express()
 const host = process.env.HOST || '127.0.0.1'
@@ -27,6 +28,15 @@ if (config.dev) {
 
 // Give nuxt middleware to express
 app.use(nuxt.render)
+
+//Set up Database
+if (config.dev) {
+  const url = 'mongodb://' + process.env.dbUser + ":" + process.env.dbPassword + "@ds135966.mlab.com:35966/mail"
+  mongoose.connect(url, {useMongoClient: true})
+} else {
+  const url = 'mongodb://' + process.env.dbUser + ":" + process.env.dbPassword + "@ds135966.mlab.com:35966/mail"
+  mongoose.connect(url, {useMongoClient: true})
+}
 
 // Listen the server
 app.listen(port, host)

@@ -34,6 +34,10 @@ module.exports = {
           exclude: /(node_modules)/
         })
       }
+    },
+    env: {
+      dbUser: process.env.DB_USER || 'pjAdmin',
+      dbPassword: process.env.DB_PASSWORD || 'mailAdmin12!'
     }
   }
 }
