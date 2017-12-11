@@ -30,7 +30,7 @@ router.get('/mails/test', function (req, res, next) {
   console.log('sending test mail!')
 
   let transporter = nodemailer.createTransport({
-      host: 'smtp.localhost',
+      host: '127.0.0.1:smtp',
       port: 465,
       secure: true, // secure:true for port 465, secure:false for port 587
   })
