@@ -32,7 +32,7 @@ router.get('/mails/test', function (req, res, next) {
   let transporter = nodemailer.createTransport({
       host: '127.0.0.1',
       port: 25,
-      secure: true, // secure:true for port 465, secure:false for port 587
+      secure: false, // secure:true for port 465, secure:false for port 587
   })
 
   // setup email data with unicode symbols
