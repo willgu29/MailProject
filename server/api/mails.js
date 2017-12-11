@@ -29,14 +29,14 @@ router.get('/mails/tracking.gif', function (req, res, next) {
 router.get('/mails/test', function (req, res, next) {
   console.log('sending test mail!')
 
+  // TODO: make secure...
   let transporter = nodemailer.createTransport({
-      host: '138.68.253.159',
-      //host: '127.0.0.1',
+      host: '127.0.0.1',
       port: 25,
-      secure: false
-      // tls: {
-      //   rejectUnauthorized:false
-      // }
+      secure: false,
+      tls: {
+        rejectUnauthorized:false
+      }
   })
 
   // setup email data with unicode symbols
