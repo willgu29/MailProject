@@ -1,3 +1,4 @@
+require('dotenv').config()
 import express from 'express'
 import { Nuxt, Builder } from 'nuxt'
 
@@ -30,13 +31,9 @@ if (config.dev) {
 app.use(nuxt.render)
 
 //Set up Database
-if (config.dev) {
-  const url = 'mongodb://' + process.env.dbUser + ":" + process.env.dbPassword + "@ds135966.mlab.com:35966/mail"
-  mongoose.connect(url, {useMongoClient: true})
-} else {
-  const url = 'mongodb://' + process.env.dbUser + ":" + process.env.dbPassword + "@ds135966.mlab.com:35966/mail"
-  mongoose.connect(url, {useMongoClient: true})
-}
+console.log(process.env.DB_USER)
+const url = 'mongodb://' + process.env.DB_USER + ":" + process.env.DB_PASS + "@ds135966.mlab.com:35966/mail"
+mongoose.connect(url)
 
 // Listen the server
 app.listen(port, host)

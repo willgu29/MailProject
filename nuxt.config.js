@@ -3,7 +3,7 @@ module.exports = {
   ** Headers of the page
   */
   head: {
-    title: 'starter',
+    title: 'Mail To',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -34,10 +34,6 @@ module.exports = {
           exclude: /(node_modules)/
         })
       }
-    },
-    env: {
-      dbUser: process.env.DB_USER || 'pjAdmin',
-      dbPassword: process.env.DB_PASSWORD || 'mailAdmin12!'
     }
   }
 }

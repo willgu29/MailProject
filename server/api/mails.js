@@ -8,7 +8,7 @@ const router = Router()
 
 /* GET mails listing. */
 router.get('/mails', function (req, res, next) {
-  res.json(users)
+  res.json('hi')
 })
 
 /* GET mails by ID. */
@@ -28,6 +28,7 @@ router.get('/mails/tracking.gif', function (req, res, next) {
 
 router.get('/mails/test', function (req, res, next) {
   console.log('sending test mail!')
+  console.log(req.query.id)
 
   // TODO: make secure...
   let transporter = nodemailer.createTransport({
@@ -39,13 +40,19 @@ router.get('/mails/test', function (req, res, next) {
       }
   })
 
+  var html = '<b>Hello world!</b>'
+  var trackingUrl = ('https://mail.penguinjeffrey.com/api/mails/tracking.gif?id=' + req.query.id)
+  var trackingCode = '<img src="' + trackingUrl + '" alt="Sent by Penguin Jeffrey" />'
+  var html = html + trackingCode
+  console.log(html)
+
   // setup email data with unicode symbols
   let mailOptions = {
       from: '"Will Gu" <will@penguinjeffrey.com>', // sender address
       to: 'willgu29@gmail.com', // list of receivers
       subject: 'Hello', // Subject line
       text: 'Hello world!', // plain text body
-      html: '<b>Hello world!</b>' // html body
+      html: html // html body
   }
 
   // send mail with defined transport object
