@@ -4,7 +4,9 @@ var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 
 var MailSchema = new Schema({
-    email:          {type: String, required: true},
+    campaign:       {type: ObjectId, ref: 'Campaign'},
+    sender:         {type: String, required: true},
+    to:             {type: String, required: true},
     sent:           {type: Boolean, default: false},
     opened:         {type: Number, default: 0},
     unsubscribed:   {type: Boolean, default: false},

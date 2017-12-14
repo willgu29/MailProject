@@ -1,8 +1,12 @@
 <template>
   <section class="container">
     <h1>Hello trackview.co</h1>
-    <ul v-if="campaigns">
-      <li v-for="(campaign, index) in campaigns" :key="index" class="item"></li>
+    <ul v-if="campaigns.length !== 0">
+      <li v-for="(campaign, index) in campaigns" :key="index" class="item">
+        <nuxt-link :to="{ name: 'trackview-campaigns-id', params: {id: campaign._id }}">
+          {{campaign._id}}
+        </nuxt-link>
+      </li>
     </ul>
     <div v-else>
       <p>Looks like you don't have any campaigns yet.</p>
@@ -15,22 +19,24 @@
 import axios from '~/plugins/axios'
 
 export default {
-  async asyncData (context) {
-    var url = ('/api/campaigns')
-    let { data } = await axios.get(url)
-    return { campaigns: data }
+  asyncData ({ params, error }) {
+    console.log(params)
+    return axios.get('/api/campaigns/')
+      .then((res) => {
+        return { campaigns: res.data }
+      })
+      .catch((e) => {
+        error({ statusCode: 404, message: 'Users not found' })
+      })
   },
   head () {
     return {
-      title: 'dashboard',
-      campaigns: []
+      title: 'dashboard'
     }
   }
 }
 </script>
 
 <style scoped>
-.logo {
-  width: 20px;
-}
+
 </style>

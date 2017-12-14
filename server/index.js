@@ -7,7 +7,7 @@ import mongoose from 'mongoose'
 
 const app = express()
 const host = process.env.HOST || '127.0.0.1'
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3000
 
 app.set('port', port)
 
@@ -31,7 +31,6 @@ if (config.dev) {
 app.use(nuxt.render)
 
 //Set up Database
-console.log(process.env.DB_USER)
 const url = 'mongodb://' + process.env.DB_USER + ":" + process.env.DB_PASS + "@ds135966.mlab.com:35966/mail"
 mongoose.connect(url)
 
