@@ -86,9 +86,9 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
 
 router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   const id = req.params.id
-  const isAdmin = req.query.isAdmin
+  const isAdming = req.query.isAdmin
 
-  if (isAdmin != 'will') { res.sendStatus(404) }
+  if (isAdmin != 'will') { return res.sendStatus(404) }
 
   Campaign.findById(id).
     populate('emails').
