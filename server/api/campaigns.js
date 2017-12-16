@@ -86,7 +86,7 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
 
 router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   const id = req.params.id
-  const isAdming = req.query.isAdmin
+  const isAdmin = req.query.isAdmin
 
   if (isAdmin != 'will') { return res.sendStatus(404) }
 
