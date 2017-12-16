@@ -6,6 +6,7 @@ var Schema = mongoose.Schema,
 var CampaignSchema = new Schema({
     name:           {type: String, default: Date.now},
     sender:         {type: String, required: true},
+    subject:        {type: String, default: ''},
     to:             {type: [String], default: []},
     isConverted:    {type: Boolean, default: false},
     emails:         [{type: ObjectId, ref: 'Mail'}],
