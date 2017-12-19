@@ -46,8 +46,10 @@ router.post('/campaigns/:id([a-zA-Z0-9]{20,})', jsonParser, function (req, res, 
       campaign.html = data.html
       console.log(campaign.html)
     } else if (editOption == 'emails') {
+      console.log(data.emails)
       var array = data.emails.split(',')
-      campaign.to.push.apply(campaign.to, array)
+      campaign.to = array
+      // campaign.to.push.apply(campaign.to, array)
       console.log(campaign.to)
     }
     campaign.save(function (err, updatedCampaign) {
@@ -152,7 +154,8 @@ function sendMail (mailId, from, to, subject, html) {
       to: to,
       subject: subject,
       text: 'This email requires html to be displayed!',
-      html: html // html body
+      html: html, // html body
+      replyTo: from
   }
 
   // send mail with defined transport object

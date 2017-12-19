@@ -12,6 +12,7 @@ var CampaignSchema = new Schema({
     emails:         [{type: ObjectId, ref: 'Mail'}],
     sent:           {type: Number, default: 0},
     opened:         {type: Number, default: 0},
+    unsubscribed:   {type: [String], default: []},
     clicked:        {type: Number, default: 0},
     bounced:        {type: Number, default: 0},
     html:           {type: String, default: ''}

@@ -20,9 +20,25 @@ router.get('/mails/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
 
 
 router.get('/mails/tracking.gif', function (req, res, next) {
-  console.log(req.query.id)
+  const id = req.query.id
+  if (! id) { return console.log('no id found') }
+
   console.log('Hello, this is an opened email!')
   // update the mail id
+  Mail.findById(id).
+    populate('campaign').
+    exec(function (err, mail) {
+      if (err) { return console.log(err) }
+      var campaign = mail.campaign
+      mail.opened = mail.opened + 1
+      campaign.opened = campaign.opened + 1
+      mail.save()
+      campaign.save()
+
+
+    })
+
+
   res.send('none')
 })
 

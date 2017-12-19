@@ -4,7 +4,7 @@
     <ul v-if="campaigns.length !== 0">
       <li v-for="(campaign, index) in campaigns" :key="index" class="item">
         <nuxt-link :to="{ name: 'trackview-campaigns-id', params: {id: campaign._id }}">
-          {{campaign._id}}
+          {{campaign.name}}
         </nuxt-link>
       </li>
     </ul>
