@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Mail from './models/Mail.js'
+import bodyParser from 'body-parser'
 
 import nodemailer from 'nodemailer'
 
@@ -13,10 +14,33 @@ router.get('/mails', function (req, res, next) {
 
 /* GET mails by ID. */
 router.get('/mails/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
-  const id = parseInt(req.params.id)
-  res.json(id)
+  const id = req.params.id
+
+  Mail.findById(id).
+    exec(function (err, mail) {
+      if (err) { return res.sendStatus(404) }
+      res.json(mail)
+    })
 })
 
+var jsonParser = bodyParser.json()
+
+router.post('/mails/unsubscribe', jsonParser, function (req, res, next) {
+  var id = req.body.id
+  if (!id) { return res.sendStatus(400) }
+  Mail.findById(id).
+    populate('campaign').
+    exec(function (err, mail) {
+      if (err) { return res.sendStatus(404) }
+      var campaign = mail.campaign
+      mail.unsubscribed = true
+      campaign.unsubscribed.push(mail.to)
+      mail.save()
+      campaign.save()
+      res.json('saved')
+    })
+
+})
 
 
 router.get('/mails/tracking.gif', function (req, res, next) {
@@ -57,7 +81,8 @@ router.get('/mails/test', function (req, res, next) {
   var html = '<b>Hello world!</b>'
   var trackingUrl = ('https://mail.penguinjeffrey.com/api/mails/tracking.gif?id=' + req.query.id)
   var trackingCode = '<img src="' + trackingUrl + '" alt="Sent by Penguin Jeffrey" />'
-  var html = html + trackingCode
+  var unsubscribeCode = ('<a style="text-align: center;" href="https://mail.penguinjeffrey.com/unsubscribe?id="' + req.query.id)
+  var html = html + trackingCode + unsubscribeCode
   console.log(html)
 
   // setup email data with unicode symbols
