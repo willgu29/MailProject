@@ -71,15 +71,14 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
       newMail.campaign = campaign.id
       newMail.sender = campaign.sender
       newMail.to = campaign.to[i]
-      newMail.save().then(function (mail) {
-        if (mail) {
-          console.log(mail.to + ' added to campaign!')
-          var array = campaign.emails
-          array = array.push(mail.id)
-          campaign.emails = array
-          campaign.save()
-        }
-      })
+      newMail.save()
+      // newMail.save().then(function (mail) {
+      //   if (mail) {
+      //     console.log(mail.to + ' added to campaign!')
+      //     campaign.emails.push(mail._id)
+      //     campaign.save()
+      //   }
+      // })
     }
     campaign.isConverted = true
     campaign.save(function (err, updatedCampaign) {
@@ -89,49 +88,50 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
   })
 })
 
+var ObjectId = require('mongoose').Types.ObjectId;
 
 router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   const id = req.params.id
   const isAdmin = req.query.isAdmin
 
   if (isAdmin != 'will') { return res.sendStatus(404) }
-
   Campaign.findById(id).
-    populate('emails').
     exec( function (err, campaign) {
       if (err) { return res.sendStatus(400) }
 
       var html = campaign.html
       var subject = campaign.subject
       var url = process.env.AMQP_URL || ('amqp://' + process.env.AMQP_USER + ":" + process.env.AMQP_PW + '@localhost:5672');
-      for (var i = 0; i < campaign.emails.length; i++) {
-        var email = campaign.emails[i]
-        amqp.connect(url, function(err, conn) {
-          conn.createChannel(function(err, ch) {
-            var q = 'send_mail';
-            var object = {
-              email: email,
-              subject: subject,
-              html: html
-            }
-            ch.assertQueue(q, {durable: true});
-            // Note: on Node 6 Buffer.from(msg) should be used
-            ch.sendToQueue(q, Buffer.from(JSON.stringify(object)), {persistent: true});
-            console.log(" [x] Sent " + object);
-          });
-          setTimeout(function() { conn.close(); }, 500);
 
-        });
-        // Refer to sendMailListener.js in Rabbit
-        // sendMail(email.id, email.sender, email.to, subject, html)
-        // email.sent = true
-        // campaign.sent = campaign.sent + 1
-        // email.save()
-        // campaign.save()
-      }
-      res.json('emails sent')
+      Mail.find({campaign: new ObjectId(id)}).
+        exec( function (err, mails) {
+          for (var i = 0; i < mails.length; i++) {
+            var mail = mails[i]
+            publishMail(mail, subject, html)
+          }
+          res.json('emails sent')
+        })
     })
 })
+
+function publishMail (email, subject, html) {
+  amqp.connect(url, function(err, conn) {
+    conn.createChannel(function(err, ch) {
+      var q = 'send_mail';
+      var object = {
+        email: email,
+        subject: subject,
+        html: html
+      }
+      ch.assertQueue(q, {durable: true});
+      // Note: on Node 6 Buffer.from(msg) should be used
+      ch.sendToQueue(q, Buffer.from(JSON.stringify(object)), {persistent: true});
+      console.log(" [x] Sent " + object);
+    });
+    setTimeout(function() { conn.close(); }, 500);
+
+  });
+}
 
 
 let transporter = nodemailer.createTransport({

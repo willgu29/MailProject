@@ -2,7 +2,7 @@
   <section class="container">
     <h1>{{campaign.name}}</h1>
     <div v-show="! campaign.isConverted">
-      <p>Subject Line:</p>
+      <p>Subject Line: {{campaign.subject}}</p>
       <input type='text' v-model="subject" placeholder="Type your subject line" />
       <input v-on:click.self="saveSubject" type="submit" value='save' />
     </div>
@@ -110,6 +110,7 @@ export default {
     },
     saveSubject: function () {
       var url = '/api/campaigns/' + this.campaign._id + '?edit=subject'
+      var self = this
       axios.post(url, {
         subject: this.subject
       }).then(function (res) {
