@@ -95,26 +95,22 @@ router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   const isAdmin = req.query.isAdmin
 
   if (isAdmin != 'will') { return res.sendStatus(404) }
-  Campaign.findById(id).
-    exec( function (err, campaign) {
-      if (err) { return res.sendStatus(400) }
 
-      var html = campaign.html
-      var subject = campaign.subject
-      var url = process.env.AMQP_URL || ('amqp://' + process.env.AMQP_USER + ":" + process.env.AMQP_PW + '@localhost:5672');
-
-      Mail.find({campaign: new ObjectId(id)}).
-        exec( function (err, mails) {
-          for (var i = 0; i < mails.length; i++) {
-            var mail = mails[i]
-            publishMail(mail, subject, html)
-          }
-          res.json('emails sent')
-        })
+  Mail.find({campaign: new ObjectId(id)}).
+    populate('campaign').
+    exec( function (err, mails) {
+      if (err) { return res.sendStatus(404) }
+      for (var i = 0; i < mails.length; i++) {
+        var mail = mails[i]
+        if (mail.sent) { continue }
+        publishMail(mail, mail.campaign.subject, mail.campaign.html)
+      }
+      res.json('emails sent')
     })
 })
 
 function publishMail (email, subject, html) {
+  var url = process.env.AMQP_URL || ('amqp://' + process.env.AMQP_USER + ":" + process.env.AMQP_PW + '@localhost:5672');
   amqp.connect(url, function(err, conn) {
     conn.createChannel(function(err, ch) {
       var q = 'send_mail';

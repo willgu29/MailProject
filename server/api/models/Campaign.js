@@ -9,7 +9,6 @@ var CampaignSchema = new Schema({
     subject:        {type: String, default: ''},
     to:             {type: [String], default: []},
     isConverted:    {type: Boolean, default: false},
-    emails:         [{type: ObjectId, ref: 'Mail'}],
     sent:           {type: Number, default: 0},
     opened:         {type: Number, default: 0},
     unsubscribed:   {type: [String], default: []},
