@@ -74,7 +74,9 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
       newMail.save().then(function (mail) {
         if (mail) {
           console.log(mail.to + ' added to campaign!')
-          campaign.emails.push(mail.id)
+          var array = campaign.emails
+          array = array.push(mail.id)
+          campaign.emails = array
           campaign.save()
         }
       })
