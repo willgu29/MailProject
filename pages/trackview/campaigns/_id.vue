@@ -1,6 +1,11 @@
 <template>
   <section class="container">
     <h1>{{campaign.name}}</h1>
+    <div v-show="! campaign.isConverted">
+      <p>Subject Line:</p>
+      <input type='text' v-model="subject" placeholder="Type your subject line" />
+      <input v-on:click.self="saveSubject" type="submit" value='save' />
+    </div>
     <div class='center' v-if="! campaign.isConverted">
           <p>Emails Added: {{campaign.to.length}}</p>
           <ul class='options'>
@@ -57,6 +62,7 @@ export default {
   },
   data () {
     return {
+      subject: '',
       viewOption: 0,
       html: '<p>Add your html here</p>',
       emails: 'Separate emails with a , and no spaces',
@@ -94,6 +100,18 @@ export default {
       axios.post(url, {
         emails: this.emails,
         html: this.html
+      }).then(function (res) {
+        console.log(res)
+        self.campaign = res.data
+        alert('saved!')
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
+    saveSubject: function () {
+      var url = '/api/campaigns/' + this.campaign._id + '?edit=subject'
+      axios.post(url, {
+        subject: this.subject
       }).then(function (res) {
         console.log(res)
         self.campaign = res.data

@@ -46,13 +46,12 @@ router.post('/campaigns/:id([a-zA-Z0-9]{20,})', jsonParser, function (req, res, 
     if (err) { return res.sendStatus(404) }
     if (editOption == 'html') {
       campaign.html = data.html
-      console.log(campaign.html)
     } else if (editOption == 'emails') {
-      console.log(data.emails)
       var array = data.emails.split(',')
       campaign.to = array
       // campaign.to.push.apply(campaign.to, array)
-      console.log(campaign.to)
+    } else if (editOption == 'subject') {
+      campaign.subject = data.subject
     }
     campaign.save(function (err, updatedCampaign) {
       if (err) { return res.sendStatus(400) }
