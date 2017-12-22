@@ -118,7 +118,7 @@ router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
             ch.sendToQueue(q, Buffer.from(JSON.stringify(object)), {persistent: true});
             console.log(" [x] Sent " + object);
           });
-          setTimeout(function() { conn.close(); process.exit(0) }, 500);
+          setTimeout(function() { conn.close(); }, 500);
 
         });
         // Refer to sendMailListener.js in Rabbit
