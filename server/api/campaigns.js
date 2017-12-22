@@ -101,12 +101,14 @@ router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
     exec( function (err, mails) {
       if (err) { return res.sendStatus(404) }
       if (mails.length <= 0) { return res.send('no emails to send!')}
+      var counter = 0
       for (var i = 0; i < mails.length; i++) {
         var mail = mails[i]
         if (mail.sent) { continue }
+        counter = counter + 1
         publishMail(mail, mail.campaign.subject, mail.campaign.html)
       }
-      res.json('emails sent')
+      res.json('emails sent: ' + counter)
     })
 })
 
