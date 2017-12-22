@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Mail from './models/Mail.js'
+import Campaign from './models/Campaign.js'
 import bodyParser from 'body-parser'
 
 import nodemailer from 'nodemailer'
@@ -37,10 +38,13 @@ router.post('/mails/sent/', jsonParser, function (req, res, next) {
     exec(function (err, mail) {
       if (err) { return res.sendStatus(404) }
       var campaign = mail.campaign
+      Campaign.update({ _id: campaign.id }, { $inc: {'sent' : 1 }}, function (err, updatedCampaign) {
+
+      })
       mail.sent = true
-      campaign.sent = campaign.sent + 1
       mail.save()
-      campaign.save()
+
+
       res.json('updated mail: sent')
     });
 })
@@ -55,10 +59,11 @@ router.post('/mails/unsubscribe', jsonParser, function (req, res, next) {
     exec(function (err, mail) {
       if (err) { return res.sendStatus(404) }
       var campaign = mail.campaign
+      Campaign.update({ _id: campaign.id }, { $push: {'unsubscribed' : mail.to }}, function (err, updatedCampaign) {
+
+      })
       mail.unsubscribed = true
-      campaign.unsubscribed.push(mail.to)
       mail.save()
-      campaign.save()
       res.json('updated mail: unsubscribed')
     })
 
@@ -79,10 +84,11 @@ router.get('/mails/tracking.gif', function (req, res, next) {
     exec(function (err, mail) {
       if (err) { return console.log(err) }
       var campaign = mail.campaign
+      Campaign.update({ _id: campaign.id }, { $inc: {'opened' : 1 }}, function (err, updatedCampaign) {
+
+      })
       mail.opened = mail.opened + 1
-      campaign.opened = campaign.opened + 1
       mail.save()
-      campaign.save()
     })
 })
 
