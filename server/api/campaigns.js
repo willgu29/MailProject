@@ -102,9 +102,10 @@ router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
 
       var html = campaign.html
       var subject = campaign.subject
+      var url = process.env.AMQP_URL || ('amqp://' + process.env.AMQP_USER + ":" + process.env.AMQP_PW + '@localhost:5672');
       for (var i = 0; i < campaign.emails.length; i++) {
         var email = campaign.emails[i]
-        amqp.connect('amqp://localhost', function(err, conn) {
+        amqp.connect(url, function(err, conn) {
           conn.createChannel(function(err, ch) {
             var q = 'send_mail';
             var object = {

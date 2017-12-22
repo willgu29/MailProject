@@ -97,6 +97,7 @@ export default {
       }).then(function (res) {
         console.log(res)
         self.campaign = res.data
+        alert('saved!')
       }).catch(function (error) {
         console.log(error)
       })
