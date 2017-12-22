@@ -31,6 +31,7 @@
       <p>Emails Sent: {{campaign.sent}}/{{campaign.to.length}}</p>
       <p>Emails Opened: {{campaign.opened}}</p>
       <p>Emails Bounced: {{campaign.bounced}}</p>
+      <p>Emails Unsubscribed: {{campaign.unsubscribed.length}}</p>
     </div>
   </section>
 </template>

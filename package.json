@@ -12,6 +12,7 @@
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
   },
   "dependencies": {
+    "amqplib": "^0.5.2",
     "axios": "^0.16.2",
     "cross-env": "^5.0.1",
     "dotenv": "^4.0.0",

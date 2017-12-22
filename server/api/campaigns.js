@@ -3,6 +3,8 @@ import Campaign from './models/Campaign.js'
 import Mail from './models/Mail.js'
 import bodyParser from 'body-parser'
 import nodemailer from 'nodemailer'
+var amqp = require('amqplib/callback_api');
+
 
 const router = Router()
 
@@ -86,6 +88,7 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
   })
 })
 
+
 router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
   const id = req.params.id
   const isAdmin = req.query.isAdmin
@@ -101,17 +104,33 @@ router.get('/campaigns/send/:id([a-zA-Z0-9]{20,})', function (req, res, next) {
       var subject = campaign.subject
       for (var i = 0; i < campaign.emails.length; i++) {
         var email = campaign.emails[i]
-        sendMail(email.id, email.sender, email.to, subject, html)
-        email.sent = true
-        campaign.sent = campaign.sent + 1
-        email.save()
-        campaign.save()
+        amqp.connect('amqp://localhost', function(err, conn) {
+          conn.createChannel(function(err, ch) {
+            var q = 'send_mail';
+            var object = {
+              email: email,
+              subject: subject,
+              html: html
+            }
+            ch.assertQueue(q, {durable: true});
+            // Note: on Node 6 Buffer.from(msg) should be used
+            ch.sendToQueue(q, Buffer.from(JSON.stringify(object)), {persistent: true});
+            console.log(" [x] Sent " + object);
+          });
+          setTimeout(function() { conn.close(); process.exit(0) }, 500);
+
+        });
+        // Refer to sendMailListener.js in Rabbit
+        // sendMail(email.id, email.sender, email.to, subject, html)
+        // email.sent = true
+        // campaign.sent = campaign.sent + 1
+        // email.save()
+        // campaign.save()
       }
       res.json('emails sent')
     })
-
-
 })
+
 
 let transporter = nodemailer.createTransport({
     host: '127.0.0.1',
@@ -145,7 +164,8 @@ let transporter = nodemailer.createTransport({
 function sendMail (mailId, from, to, subject, html) {
   var trackingUrl = ('https://mail.penguinjeffrey.com/api/mails/tracking.gif?id=' + mailId)
   var trackingCode = '<img src="' + trackingUrl + '" alt="Sent by Penguin Jeffrey" />'
-  var html = html + trackingCode
+  var unsubscribeCode = ('<a style="text-align: center;" href="https://mail.penguinjeffrey.com/unsubscribe?id="' + mailId)
+  var html = html + trackingCode + unsubscribeCode
   console.log(html)
 
   // setup email data with unicode symbols
