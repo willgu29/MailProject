@@ -43,8 +43,6 @@ router.post('/mails/sent/', jsonParser, function (req, res, next) {
       })
       mail.sent = true
       mail.save()
-
-
       res.json('updated mail: sent')
     });
 })
