@@ -76,7 +76,6 @@ router.get('/mails/tracking.gif', function (req, res, next) {
 
   if (! id) { return console.log('no id found') }
 
-  console.log('Hello, this is an opened email!')
   Mail.findById(id).
     populate('campaign').
     exec(function (err, mail) {

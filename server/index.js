@@ -35,5 +35,6 @@ const url = 'mongodb://' + process.env.DB_USER + ":" + process.env.DB_PASS + "@d
 mongoose.connect(url)
 
 // Listen the server
-app.listen(port, host)
+const server = app.listen(port, host)
+server.timeout = 240000; //4 minutes
 console.log('Server listening on ' + host + ':' + port) // eslint-disable-line no-console

@@ -134,7 +134,7 @@ function publishMail (email, subject, html) {
 
 router.get('/campaigns/test', function (req, res, next) {
   var newCampaign = new Campaign()
-  newCampaign.sender = 'Trackview <info@trackview.net>'
+  newCampaign.sender = 'TrackView <info@trackview.net>'
   newCampaign.save(function (err, campaign) {
     if (err) { return res.sendStatus(404) }
     res.json(campaign)
