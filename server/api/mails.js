@@ -89,5 +89,4 @@ router.get('/mails/tracking.gif', function (req, res, next) {
     })
 })
 
-
 export default router

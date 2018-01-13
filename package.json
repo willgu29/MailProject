@@ -17,6 +17,8 @@
     "cross-env": "^5.0.1",
     "dotenv": "^4.0.0",
     "express": "^4.15.3",
+    "google-auth-library": "^1.0.0",
+    "googleapis": "^23.0.0",
     "mongoose": "^4.11.9",
     "nodemailer": "^4.4.1",
     "nuxt": "^1.0.0-rc4",
