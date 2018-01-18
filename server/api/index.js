@@ -15,6 +15,10 @@ const router = Router()
 import GmailHelper from './helpers/gmail.js'
 import TemplatePicker from './helpers/template.js'
 
+var templateNames = {
+  'NONE_FOUND': -1,
+  'AUTO_REPLY': 0
+}
 
 //Client Auth
 var gmail = google.gmail('v1');
@@ -43,16 +47,6 @@ router.get('/redirect-gmail', function (req, res, next) {
 
 })
 
-router.get('/gmail/test', function (req, res, next) {
-  res.send('kk')
-  axios.get('https://willgu29:clouds12@mail.google.com/mail/feed/atom/')
-  .then(function (res) {
-    console.log(res)
-  })
-  .catch(function (err) {
-    console.log(err)
-  })
-})
 
 router.get('/gmail', function (req, res, next) {
   var email = req.query.email;
@@ -65,6 +59,7 @@ router.get('/gmail', function (req, res, next) {
       if (user.tokens && (user.tokens.expiry_date > getTime()) ) {
         oauth2Client.credentials = user.tokens;
         gmailHelper.oauth2Client.credentials = user.tokens;
+        gmailHelper.pjLabels = user.pjLabels
         res.send('parsing mail')
         getThreads(oauth2Client);
       } else {
@@ -89,7 +84,7 @@ function getThreads(oauth2Client) {
     userId: 'me',
     auth: oauth2Client,
     labelIds: ["UNREAD", "INBOX"],
-    maxResults: 20
+    maxResults: 40
   }, function (err, data) {
     if (err) { return console.log('An error occured', err); }
 
@@ -112,8 +107,13 @@ function parseThread(thread) {
   if (! lastMessage.labelIds || (lastMessage.labelIds.indexOf("DRAFT") != -1) || (lastMessage.labelIds.indexOf("SENT") != -1)) {
     return; //no need to look at drafts or sent messages, skip them
   } else {
-    parseMessage(lastMessage, function (to, subject, replyText) {
-      gmailHelper.createDraft(thread.id, to, subject, replyText)
+    parseMessage(lastMessage, function (to, subject, templateIndex) {
+      gmailHelper.createDraft(thread.id, to, subject, templateIndex, function(draftId) {
+        gmailHelper.sendDraft(draftId, function(threadId) {
+          gmailHelper.removeLabels(threadId, ["UNREAD", "INBOX"])
+        })
+      })
+
     })
   }
 }
@@ -126,39 +126,69 @@ function parseMessage(message, callback) {
 
   var data = findPlainText(message.payload)
   var text = gmailHelper.convertBase64ToString(data)
+  //case-insensitive, global replace with ''
+  text = text.replace(/Sent from my iPhone/ig, '')
 
   var fromIndex = findHeader('From', message.payload.headers)
   var from = message.payload.headers[fromIndex].value;
 
   var snippet = message.snippet
 
-  chooseTemplate(subject, text, snippet)
-  // callback(from, subject, 'Hello World! &*((*&)) From Will')
+  if (templatePicker.parsePaypal(subject)) { return }
+
+
+  var templateIndex = chooseTrackViewTemplate(subject, text, snippet)
+
+  if (templateIndex == templateNames['AUTO_REPLY']) {
+    console.log(subject + templateIndex)
+    // callback(from, subject, templateIndex)
+  }
 }
 
-function chooseTemplate(subject, text, snippet) {
+function chooseTrackViewTemplate(subject, text, snippet) {
+    var language = templatePicker.parseLanguage(subject)
+    if (language == 'UNKNOWN') {
+      //format l..l l..?l Support for .+ == English
+      var isEnglish = templatePicker.parseSupport(subject) ? 'ENGLISH' : 'UNKNOWN'
+      if (isEnglish) { language = 'ENGLISH' }
+    }
 
-    axios.post('https://www.penguinjeffrey.com/translate', {
-      text: snippet
-    })
-    .then(function (res) {
-      console.log(subject + " " + res.data)
-      // see language codes: https://cloud.google.com/translate/docs/translating-text#language-params
-      var lang = res.data
-      if (lang == 'en') {
-        var isMatch = templatePicker.parseSubject(subject)
-        if (isMatch) {
-          //send empty body template
-          // console.log('match 99!')
-        }
+    if (language == 'UNKNOWN') {
+      //parse text and go from there (most likely english)
+      // translateAndPick(subject, text, snippet)
+      return templateNames['NONE_FOUND']
+    } else if (language == 'ENGLISH') {
+      var isIOS = templatePicker.parseIOS(subject)
+      var isEmpty = templatePicker.parseEmpty(text)
+      if (isEmpty) {
+        return templateNames['AUTO_REPLY']
       }
-    })
-    .catch(function (err) {
-      console.log('failed to get language')
-    })
+    } else {
+      //not supporting other language codes yet
+      return templateNames['NONE_FOUND']
+    }
 
 
 }
+
+function translateAndPick (subject, text, snippet) {
+  axios.post('https://www.penguinjeffrey.com/translate', {
+    text: snippet
+  })
+  .then(function (res) {
+    // console.log(subject + " " + res.data)
+    // see language codes: https://cloud.google.com/translate/docs/translating-text#language-params
+    var lang = res.data
+    if (lang == 'en') {
+      var isEmpty = templatePicker.parseEmpty(text)
+      console.log('is empty: ' + isEmpty)
+    }
+  })
+  .catch(function (err) {
+    console.log('failed to get language')
+  })
+}
+
 
 function findPlainText (payload) {
   var data;
@@ -237,6 +267,7 @@ function storeTokens(email, tokens) {
   .exec(function (err, user) {
     if (err) { console.log(err) }
     user.tokens = tokens;
+    gmailHelper.pjLabels = user.pjLabels
     user.save(function (err, updatedUser) {
       if (err) { console.log(err) }
       console.log('saved token!')

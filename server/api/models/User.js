@@ -6,7 +6,8 @@ var Schema = mongoose.Schema,
 var UserSchema = new Schema({
     email:         {type: String, required: true},
     name:          {type: String, default: ''},
-    tokens:        {type: Schema.Types.Mixed, default: {} }
+    tokens:        {type: Schema.Types.Mixed, default: {} },
+    pjLabels:     {type: [String], default: []}
 
 }, { timestamps: { createdAt: 'createdAt' }});
 
