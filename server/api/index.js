@@ -83,7 +83,7 @@ function getThreads(oauth2Client) {
   var res = gmail.users.threads.list({
     userId: 'me',
     auth: oauth2Client,
-    labelIds: ["UNREAD", "INBOX"],
+    labelIds: ["UNREAD", "INBOX", 'Label_3'],
     maxResults: 40
   }, function (err, data) {
     if (err) { return console.log('An error occured', err); }
@@ -113,7 +113,6 @@ function parseThread(thread) {
           gmailHelper.removeLabels(threadId, ["UNREAD", "INBOX"])
         })
       })
-
     })
   }
 }
@@ -127,7 +126,7 @@ function parseMessage(message, callback) {
   var data = findPlainText(message.payload)
   var text = gmailHelper.convertBase64ToString(data)
   //case-insensitive, global replace with ''
-  text = text.replace(/Sent from my iPhone/ig, '')
+  text = text.replace(/Sent from my iP(hone|od)/ig, '')
 
   var fromIndex = findHeader('From', message.payload.headers)
   var from = message.payload.headers[fromIndex].value;
@@ -140,8 +139,9 @@ function parseMessage(message, callback) {
   var templateIndex = chooseTrackViewTemplate(subject, text, snippet)
 
   if (templateIndex == templateNames['AUTO_REPLY']) {
-    console.log(subject + templateIndex)
-    // callback(from, subject, templateIndex)
+    callback(from, subject, templateIndex)
+  } else {
+    // console.log(snippet)
   }
 }
 
@@ -158,7 +158,6 @@ function chooseTrackViewTemplate(subject, text, snippet) {
       // translateAndPick(subject, text, snippet)
       return templateNames['NONE_FOUND']
     } else if (language == 'ENGLISH') {
-      var isIOS = templatePicker.parseIOS(subject)
       var isEmpty = templatePicker.parseEmpty(text)
       if (isEmpty) {
         return templateNames['AUTO_REPLY']
@@ -168,6 +167,7 @@ function chooseTrackViewTemplate(subject, text, snippet) {
       return templateNames['NONE_FOUND']
     }
 
+    return templateNames['NONE_FOUND']
 
 }
 

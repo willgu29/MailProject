@@ -25,6 +25,9 @@ class GmailHelper {
   constructor(oauth2Client, labels) {
     this.oauth2Client = oauth2Client
     this.pjLabels = labels
+    this.sendDraft = this.sendDraft.bind(this);
+    this.createDraft = this.createDraft.bind(this);
+    this.removeLabels = this.removeLabels.bind(this);
   }
 
   convertStringToBytes (string) {
@@ -87,21 +90,34 @@ class GmailHelper {
     return raw
   }
 
-  sendDraft (draftId, callback) {
+  sendDraft(draftId, callback) {
     var data = {'id': draftId }
+
+    var draftIdd = draftId
+
+    var self = this;
     var cb = callback;
     gmail.users.drafts.send({
       userId: 'me',
       auth: this.oauth2Client,
       resource: data
     }, function (err, data) {
-      if (err) { return console.log('An error occured', err); }
+      if (err) {
+        console.log('Wait to retry send: ' + draftIdd)
+        setTimeout(function () { self.sendDraft(draftIdd, cb)  }, 500)
+        return
+      }
       console.log('drafted sent as: ' + data.id)
       cb(data.threadId)
     })
   }
 
-  createDraft (threadId, to, subject, templateIndex, callback) {
+  createDraft(threadId, to, subject, templateIndex, callback) {
+
+    var threadIdd = threadId
+    var too = to
+    var subjectt  = subject
+    var templateIndexx = templateIndex
 
     if (templateIndex < 0 || templateIndex >= templates.length) {
       //ERROR: no supporting template
@@ -113,6 +129,8 @@ class GmailHelper {
     var raw = this.createRawHTML(to, subject, template)
 
     var data = {'message': { 'raw': raw, 'threadId': threadId } };
+
+    var self = this;
     var cb = callback;
     gmail.users.drafts.create({
       userId: 'me',
@@ -120,15 +138,24 @@ class GmailHelper {
       resource: data
     },
     function (err, data) {
-      if (err) { return console.log('An error occured', err); }
+      if (err) {
+        console.log('Wait to retry create draft: ' + threadId)
+        setTimeout(function () { self.createDraft(threadIdd, too, subjectt, templateIndexx, cb) } , 500)
+        return
+      }
       console.log('drafted created')
       cb(data.id)
     })
   }
   //labels = array ["INBOX", "UNREAD"]
-  removeLabels (threadId, labels) {
+  removeLabels(threadId, labels) {
+    var threadIdd = threadId
+    var labelss = labels
+
     var data = { 'removeLabelIds': labels, 'addLabelIds': this.pjLabels }
     var pjLabels = this.pjLabels
+
+    var self = this
     gmail.users.threads.modify({
       userId: 'me',
       auth: this.oauth2Client,
@@ -136,7 +163,11 @@ class GmailHelper {
       resource: data
     },
     function (err, data) {
-      if (err) { return console.log('An error occured', err); }
+      if (err) {
+        console.log('Wait to retry labels: ' + threadIdd)
+        setTimeout(function () { self.removeLabels(threadIdd, labelss) }, 500)
+        return
+      }
       console.log('thread archived + read +' + pjLabels)
     })
   }

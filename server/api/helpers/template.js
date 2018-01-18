@@ -98,19 +98,17 @@ class TemplatePicker {
   }
 
   parseEmpty(text) {
-    if (text.trim() == '') {
+    //trim beginning and end
+    var regex = /^\s+|\s+$/g
+    var replacedText = text.replace(regex, '')
+    if (replacedText == '') {
       return true
     }
+    return false
     //match email
-    var regex = /[\w|\d]+@.+\.\w{2,5}/g;
-    var match = regex.exec(text)
-    if (match == null) { return false }
-    //email is first thing and close to only thing in body
-    if (match.index < 15) {
-      return true
-    } else {
-      return false
-    }
+    // var regex = /[\w|\d]+@.+\.\w{2,5}/g;
+    // var match = regex.exec(text)
+
   }
   parsePaypal(subject) {
     var regex = /Notification of payment received/g;
