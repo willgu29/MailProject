@@ -17,7 +17,10 @@ import TemplatePicker from './helpers/template.js'
 
 var templateNames = {
   'NONE_FOUND': -1,
-  'AUTO_REPLY': 0
+  'AUTO_REPLY_EN': 0,
+  'AUTO_REPLY_ES': 1,
+  'AUTO_REPLY_TR': 2,
+  'AUTO_REPLY_PT': 3
 }
 
 //Client Auth
@@ -47,58 +50,81 @@ router.get('/redirect-gmail', function (req, res, next) {
 
 })
 
+router.get('/test', function (req, res, next) {
+  repeat()
+  res.send('...')
+})
 
-router.get('/gmail', function (req, res, next) {
-  var email = req.query.email;
-  if (! email) { return res.sendStatus(400) }
-  User.findOne({email: email})
+
+// router.get('/gmail', function (req, res, next) {
+//   var email = req.query.email;
+//   if (! email) { return res.sendStatus(400) }
+//   User.findOne({email: email})
+//   .exec(function (err, user) {
+//     if (err) {
+//       return res.status(404).send('user is not in database')
+//     } else {
+//       if (user.tokens && (user.tokens.expiry_date > getTime()) ) {
+//         oauth2Client.credentials = user.tokens;
+//         gmailHelper.oauth2Client.credentials = user.tokens;
+//         gmailHelper.pjLabels = user.pjLabels
+//         res.send('parsing mail')
+//         getThreads(oauth2Client);
+//       } else {
+//         res.send('fetching token')
+//         getAccessToken(oauth2Client, function (oauth) {
+//           getThreads(oauth2Client)
+//         })
+//       }
+//     }
+//   })
+// });
+
+
+function repeat() {
+  User.findOne({email: 'cs@trackview.co'})
   .exec(function (err, user) {
-    if (err) {
-      return res.status(404).send('user is not in database')
+    if (err) { return console.log('user not found') }
+    if (! user.tokens ) {
+      console.log('no tokens')
     } else {
-      if (user.tokens && (user.tokens.expiry_date > getTime()) ) {
-        oauth2Client.credentials = user.tokens;
-        gmailHelper.oauth2Client.credentials = user.tokens;
-        gmailHelper.pjLabels = user.pjLabels
-        res.send('parsing mail')
-        getThreads(oauth2Client);
-      } else {
-        res.send('fetching token')
-        getAccessToken(oauth2Client, function (oauth) {
-          getThreads(oauth2Client)
-        })
-      }
+      //Google should automatically refresh access-token.
+      gmailHelper.oauth2Client.credentials = user.tokens;
+      gmailHelper.pjLabels = user.pjLabels;
+      getThreads(gmailHelper.oauth2Client, function (threads) {
+        //loop through threads
+        for (var i = 0; i < threads.length; i++) {
+          //only look at last message in thread
+          var threadId = threads[i].id
+          gmail.users.threads.get({
+            userId: 'me',
+            auth: gmailHelper.oauth2Client,
+            id: threadId
+          }, function (err, thread) {
+            if (err) { return console.log('An error occured', err); }
+            parseThread(thread)
+          })
+        }
+      })
     }
   })
-});
-
-function getTime() {
-  var d = new Date().getTime()
-  return d
-  // google access token expires in
-  // (d + (1000 * 60 * 60 * 24 * 7)) :7 days
 }
 
-function getThreads(oauth2Client) {
+function getThreads(oauth2Client, callback) {
+  var cb = callback;
   var res = gmail.users.threads.list({
     userId: 'me',
     auth: oauth2Client,
-    labelIds: ["UNREAD", "INBOX", 'Label_3'],
+    labelIds: ["UNREAD", "INBOX"], //Label_3 == iOS trackview.co
     maxResults: 40
   }, function (err, data) {
     if (err) { return console.log('An error occured', err); }
-
-    for (var i = 0; i < data.threads.length; i++) {
-      var threadId = data.threads[i].id
-      gmail.users.threads.get({
-        userId: 'me',
-        auth: oauth2Client,
-        id: threadId
-      }, function (err, thread) {
-        if (err) { return console.log('An error occured', err); }
-        parseThread(thread)
-      })
+    if (data.threads == undefined) {
+      //no threads found
+      cb([])
+      return;
     }
+    cb(data.threads)
   })
 }
 
@@ -110,7 +136,7 @@ function parseThread(thread) {
     parseMessage(lastMessage, function (to, subject, templateIndex) {
       gmailHelper.createDraft(thread.id, to, subject, templateIndex, function(draftId) {
         gmailHelper.sendDraft(draftId, function(threadId) {
-          gmailHelper.removeLabels(threadId, ["UNREAD", "INBOX"])
+          gmailHelper.removeLabels(threadId, ["UNREAD", "INBOX"]) //also adds PJ label
         })
       })
     })
@@ -118,10 +144,15 @@ function parseThread(thread) {
 }
 
 function parseMessage(message, callback) {
-  // console.log(JSON.stringify(message.snippet))
+  // console.log(JSON.stringify(message))
   // console.log(JSON.stringify(message.payload.parts))
   var subjectIndex = findHeader('Subject', message.payload.headers)
-  var subject = message.payload.headers[subjectIndex].value
+  var subject;
+  if (subjectIndex == -1) {
+    subject = '(no subject)'
+  } else {
+    subject = message.payload.headers[subjectIndex].value
+  }
 
   var data = findPlainText(message.payload)
   var text = gmailHelper.convertBase64ToString(data)
@@ -135,13 +166,13 @@ function parseMessage(message, callback) {
 
   if (templatePicker.parsePaypal(subject)) { return }
 
-
   var templateIndex = chooseTrackViewTemplate(subject, text, snippet)
 
-  if (templateIndex == templateNames['AUTO_REPLY']) {
-    callback(from, subject, templateIndex)
+  if (templateIndex >= 0 ) {
+    console.log(subject)
+    // callback(from, subject, templateIndex)
   } else {
-    // console.log(snippet)
+    //console.log(snippet)
   }
 }
 
@@ -160,9 +191,26 @@ function chooseTrackViewTemplate(subject, text, snippet) {
     } else if (language == 'ENGLISH') {
       var isEmpty = templatePicker.parseEmpty(text)
       if (isEmpty) {
-        return templateNames['AUTO_REPLY']
+        return templateNames['AUTO_REPLY_EN']
       }
-    } else {
+    }
+    // } else if (language == "SPANISH") {
+    //   var isEmpty = templatePicker.parseEmpty(text)
+    //   if (isEmpty) {
+    //     return templateNames['AUTO_REPLY_ES']
+    //   }
+    // } else if (language == "TURKISH") {
+    //   var isEmpty = templatePicker.parseEmpty(text)
+    //   if (isEmpty) {
+    //     return templateNames['AUTO_REPLY_TR']
+    //   }
+    // } else if (language == "PORTUGUESE") {
+    //   var isEmpty = templatePicker.parseEmpty(text)
+    //   if (isEmpty) {
+    //     return templateNames['AUTO_REPLY_PT']
+    //   }
+    // }
+    else {
       //not supporting other language codes yet
       return templateNames['NONE_FOUND']
     }
@@ -189,6 +237,10 @@ function translateAndPick (subject, text, snippet) {
   })
 }
 
+function getTime() {
+  var d = new Date().getTime()
+  return d
+}
 
 function findPlainText (payload) {
   var data;
@@ -235,7 +287,7 @@ var rl = readline.createInterface({
 function getAccessToken(oauth2Client, callback) {
   var url = oauth2Client.generateAuthUrl({
     // 'online' (default) or 'offline' (gets refresh_token)
-    access_type: 'online',
+    access_type: 'offline',
 
     // If you only need one scope you can pass it as a string
     scope: 'https://www.googleapis.com/auth/gmail.modify',
@@ -276,15 +328,7 @@ function storeTokens(email, tokens) {
 }
 
 
-// // retrieve an access token
-// getAccessToken(oauth2Client, function () {
-//   // retrieve user profile
-  // var res = gmail.users.messages.list({ userId: 'me', auth: oauth2Client }, function (err, messages) {
-  //   if (err) {
-  //     return console.log('An error occured', err);
-  //   }
-  //   console.log(messages);
-  // });
-// });
+
+
 
 export default router
