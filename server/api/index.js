@@ -55,7 +55,7 @@ router.get('/test', function (req, res, next) {
   res.send('...')
 })
 
-var timeInterval = 120 * 60 * 1000
+var timeInterval = 60 * 60 * 1000
 setInterval(automateMail, timeInterval)
 
 // router.get('/gmail', function (req, res, next) {
