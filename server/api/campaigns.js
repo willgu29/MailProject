@@ -72,13 +72,6 @@ router.get('/campaigns/convert/:id([a-zA-Z0-9]{20,})', function (req, res, next)
       newMail.sender = campaign.sender
       newMail.to = campaign.to[i]
       newMail.save()
-      // newMail.save().then(function (mail) {
-      //   if (mail) {
-      //     console.log(mail.to + ' added to campaign!')
-      //     campaign.emails.push(mail._id)
-      //     campaign.save()
-      //   }
-      // })
     }
     campaign.isConverted = true
     campaign.save(function (err, updatedCampaign) {

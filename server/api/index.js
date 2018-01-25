@@ -51,10 +51,12 @@ router.get('/redirect-gmail', function (req, res, next) {
 })
 
 router.get('/test', function (req, res, next) {
-  repeat()
+  automateMail()
   res.send('...')
 })
 
+var timeInterval = 30 * 60 * 1000
+setInterval(automateMail, timeInterval)
 
 // router.get('/gmail', function (req, res, next) {
 //   var email = req.query.email;
@@ -81,7 +83,8 @@ router.get('/test', function (req, res, next) {
 // });
 
 
-function repeat() {
+function automateMail() {
+  console.log('running mail automaton')
   User.findOne({email: 'cs@trackview.co'})
   .exec(function (err, user) {
     if (err) { return console.log('user not found') }
@@ -169,8 +172,8 @@ function parseMessage(message, callback) {
   var templateIndex = chooseTrackViewTemplate(subject, text, snippet)
 
   if (templateIndex >= 0 ) {
-    console.log(subject)
-    // callback(from, subject, templateIndex)
+    // console.log(subject)
+    callback(from, subject, templateIndex)
   } else {
     //console.log(snippet)
   }
